@@ -24,12 +24,21 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="searchPage"
         options={{
-          title: 'Explore',
+          title: 'Search',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="groupPage"
+        options={{
+          title: 'Groups',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
+     
+     
     </Tabs>
   );
 }
