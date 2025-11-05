@@ -17,7 +17,7 @@ export default function LoginPage() {
        
        <Button
        title ="Create Account"
-       onPress={() => router.replace('/login')}></Button>
+       onPress={() => router.replace('/')}></Button>
       </View>
     </View>
 
