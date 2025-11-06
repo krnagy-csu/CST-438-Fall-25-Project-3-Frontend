@@ -58,6 +58,13 @@ const[search, setSearch]= useState('');
         value={search}
         onChangeText={(text) => setSearch(text)}
         />
+
+        <TouchableOpacity 
+          style={styles.createGroupButton} 
+          onPress={() => router.push('/groupCreationPage')}
+        >
+          <Text style={styles.createGroupButtonText}>+ Create Group</Text>
+        </TouchableOpacity>
     </View>
 
       {/* tabs for players or games */}
@@ -319,6 +326,18 @@ genreButtonSelected: {
   borderWidth: 2,              
   borderColor: '#115E59',
   
+},
+createGroupButton: {
+  backgroundColor: '#5865F2',
+  borderRadius: 10,
+  padding: 12,
+  alignItems: 'center',
+  marginTop: 15,
+},
+createGroupButtonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '600',
 },
 tabsText:{
   textAlign:'center',
