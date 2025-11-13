@@ -146,14 +146,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#1A1A2E",
     padding: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 30,
-    color: "#333",
+    color: "#5865F2",
   },
   input: {
     width: "100%",
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
     fontSize: 16,
+    color:'white'
   },
   loginButton: {
     width: "100%",
