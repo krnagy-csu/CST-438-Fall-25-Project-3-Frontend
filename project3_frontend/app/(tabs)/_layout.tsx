@@ -16,12 +16,12 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
 
-        // 💡 Here's where you set the background color
+      
         tabBarStyle: {
           backgroundColor: '#1A1A2E',
-          borderTopColor: 'transparent', // removes the gray border line
-          height: 70,                    // optional: make it taller for better spacing
-          paddingBottom: 10,             // optional: adds padding inside
+          borderTopColor: 'transparent', 
+          height: 70,                    
+          paddingBottom: 10,            
         },
       }}>
       
@@ -46,6 +46,24 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+
+       <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+        
+      />
+      <Tabs.Screen
+        name="activity"
+        options={{
+          title: 'Activity',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+        
+      />
+    
     </Tabs>
   );
 }

@@ -1,18 +1,23 @@
 import { View, Text, StyleSheet, TextInput,Button } from 'react-native';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 
 export default function LoginPage() {
   return (
     
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+
     <View style={styles.container}>
       
-     <Text style={styles.title}>Groups</Text>
+     <TextInput>Current Password:</TextInput>
+     <TextInput>New Password:</TextInput>
+     <TextInput>Confirm Password:</TextInput>
 
        
     </View>
 
 
-    
+    </>
   );
 }
 
@@ -21,7 +26,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1A1A2E',
+    // backgroundColor: '#1A1A2E',
+    backgroundColor:'white'
   },
   title: {
   fontSize: 32,
