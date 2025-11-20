@@ -1,41 +1,32 @@
 import { View, Text, StyleSheet, TextInput,Button,TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import { router } from 'expo-router';
-import React, { act, useState } from 'react';
+import React, { act, useEffect, useState } from 'react';
+import apiClient from '../../api/apiClient';
+import { Group } from "../../../../types/Group";
 
 
-export default function LoginPage() {
+
+export default function HomePage() {
 
     // //will use this later to replace our games placeholder 
-    // const [games, setGames] = useState([]);
-    //GET: fetch games /api/games
+    const [groups, setGroups] = useState<Group[]>([]);
+    //GET: fetch games /api/groups
+
+    const loadGroups = async () => {
+      try{
+        const res = await apiClient.get("api/groups");
+        // console.log("API RESPONSE:", res.data);
+        
+      } catch(error){
+        console.error("Failed to load groups:", error);
+      }
+    }
+      useEffect(() => {
+        loadGroups();
+      }, []);
 
 
    
-  // temp data
-const games = [
-  { id: 1, name: 'OKC vs GSW', description: 'Epic basketball game', time: 'Saturday 7pm', genre: 'Sports' },
-  { id: 2, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 3, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Horror' },
-   { id: 4, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 5, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 6, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Fantasy' },
-   { id: 7, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 8, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 9, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Fantasy' },
-   { id: 10, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 11, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 12, name: 'Basketball', description: 'Basketball', time: 'Friday 8pm', genre: 'Basketball' },
-   { id: 13, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 14, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 15, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Fantasy' },
-];
-
-
-
-
-  
-
-
   //GET: fetch players
   // /api/games?search=keyword
 const players = [
@@ -53,21 +44,21 @@ const players = [
 
 const [activeTab, setActiveTab] = useState('findGame');
 const [modalVisible, setModalVisible] = useState(false);
-const [selectedGame, setSelectedGame] = useState<any>(null);
+const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 const[selectedGameGenre, setSelectedGameGenre]= useState('');
 const[search, setSearch]= useState('');
 
 
 
 
-  const filterSearch = games.filter((game) => {
-      return(
-        game.name.toLowerCase().includes(search.toLowerCase())
-        || game.description.toLowerCase().includes(search.toLowerCase())
-        || game.time.toLowerCase().includes(search.toLowerCase())
-        || game.genre.toLowerCase().includes(search.toLowerCase())
-      );
-    });
+  const filterSearch = groups?.filter((group) => {
+  return (
+    group.name.toLowerCase().includes(search.toLowerCase()) ||
+    group.description?.toLowerCase().includes(search.toLowerCase()) ||
+    group.activityType.toLowerCase().includes(search.toLowerCase()) ||
+    group.zipCode.toLowerCase().includes(search.toLowerCase())
+  );
+});
 
 
 
@@ -172,23 +163,25 @@ const[search, setSearch]= useState('');
 
 
 
-        {/* filter the games */}
-        
-        {(search ? filterSearch :games)
-        .filter(game => selectedGameGenre === '' || game.genre === selectedGameGenre) 
-    
-        .map((game) => (
-          <TouchableOpacity style ={styles.gameContainer} key={game.id}
-          onPress={() => {
-                  setSelectedGame(game);
-                  setModalVisible(true);
-          }}>
-            <Text style = {{color:'white', fontSize:25, paddingBottom: 5}}>{game.name}</Text>
-            <Text style = {{color:'#A8B0C2', paddingBottom: 5}}>{game.description}</Text>
-                  <Text style = {{color:'#A8B0C2', paddingTop: 5}}>📅 {game.time}</Text>
-          </TouchableOpacity>
-        ))}
+       {(search ? filterSearch : groups).map((group) => (
+      <TouchableOpacity
+        key={group.id}
+        style={styles.gameContainer}
+        onPress={() => {
+          setSelectedGroup(group);
+          setModalVisible(true);
+        }}
+      >
+        <Text style={{ color: "white", fontSize: 25, marginBottom: 5 }}> {group.name}</Text>
+        <Text style={{ color: "#A8B0C2", marginBottom: 5 }}>{group.description}</Text>
+        <Text style={{ color: "#A8B0C2" }}>  🎮 {group.activityType}</Text>
+        <Text style={{ color: "#A8B0C2" }}>📍 ZIP: {group.zipCode}</Text>
+        <Text style={{ color: "#A8B0C2" }}>🗓 {group.eventDate ? group.eventDate : "No date provided"}</Text>
+        <Text style={{ color: "#A8B0C2" }}>👥 Max Members: {group.maxMembers}</Text>
+      </TouchableOpacity>
+    ))}
             </View>
+            
           ) :  // if players tab 
            activeTab === 'findPlayers'   ?
            (
@@ -217,20 +210,20 @@ const[search, setSearch]= useState('');
         <View style = {styles.modalBackground}>
           <View style = {styles.modalGameInfo}>
         <Text style={styles.text}>Game Details</Text>
-        <Text style={styles.gameTitle}>{selectedGame?.name}</Text>
-          <Text style={styles.gameDescription}>{selectedGame?.description}</Text>
+        <Text style={styles.gameTitle}>{selectedGroup?.name}</Text>
+            <Text style={styles.gameDescription}>{selectedGroup?.description}</Text>
         <View style={styles.gridRow}>
         <View style={styles.gridColumn}>
-          <Text style ={styles.modalTexts}>Players: 3/5</Text>
+          <Text style={styles.modalTexts}>Max Members: {selectedGroup?.maxMembers}</Text>
         </View>
         <View style={styles.gridColumn}>
-          <Text style={styles.modalTexts}>Genre: {selectedGame?.genre}</Text>
+          <Text style={styles.modalTexts}>ZIP: {selectedGroup?.zipCode}</Text>
         </View>
         </View>
 
         <View style={styles.gridRow}>
         <View style={styles.gridColumn}>
-          <Text style={styles.modalTexts}>Schedule: {selectedGame?.time}</Text>
+          <Text style={styles.modalTexts}>Schedule: {selectedGroup?.eventDate}</Text>
         </View>
         <View style={styles.gridColumn}>
           <Text style={styles.modalTexts}>Duration: </Text>

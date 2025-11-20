@@ -1,102 +1,79 @@
-import { View, Text, StyleSheet, TextInput,Button, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button, TouchableOpacity } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-
+import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+
+import apiClient from "../../api/apiClient";   // ← IMPORTANT
 
 export default function ProfilePage() {
-
-    // GET  
-    // later will fetch from backend instead of AsyncStorage
-    const [username, setUsername] = useState('@username');
-  const [bio, setBio] = useState('Testing bio here');
-
-
-useFocusEffect(
-  useCallback(() => {
-    loadProfile();
-  }, [])
-);
+  const [username, setUsername] = useState('@username');
+  const [bio, setBio] = useState('Loading...');
+  
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [])
+  );
 
   const loadProfile = async () => {
-
-      //GET
-      // const response = await fetch(' /users/profile or whatever the endpoint is for the profile or users');
-    // const data = await response.json();
-    // setUsername(data.username);
-    // setBio(data.bio);
-
-
-
     try {
-      const savedUsername = await AsyncStorage.getItem('username');
-      const savedBio = await AsyncStorage.getItem('bio');
+      // GET REAL USER DATA FROM BACKEND
+      const response = await apiClient.get("/api/users/me");
+      const data = response.data;
 
-      if (savedUsername) setUsername(savedUsername);
-      if (savedBio) setBio(savedBio);
+      console.log("PROFILE DATA:", data);
+
+      setUsername("@" + data.username);
+      setBio(data.bio || "No bio yet");
     } catch (error) {
-      console.log('Error profile');
+      console.log("Error fetching profile:", error);
+      setBio("Could not load profile.");
     }
-};
-  
+  };
+
   return (
-      <>
+    <>
       <Stack.Screen options={{ headerShown: false }} />
-    
-    
 
-    <View style={styles.container}>
-   
-
-    <View style={styles.header}>
-      
-     <Text style={styles.title}>Profile</Text>
-       </View>
-        
-      <View style ={styles.body}>
-
-      <View style = {styles.pictureContainer}>
-      <Image  style={styles.profilePicture}
-          source={require('../../assets/images/profilePicture.jpg')}
-        />
-      </View>
-
-        {/* //username here, replace later with data from database */}
-        <Text style = {styles.profileText}>{username}</Text>
-        <Text style = {styles.profileText}>{bio}</Text>
-      
-
-
-
-      <View style = {styles.buttonsContainer}>
-      <TouchableOpacity onPress={() => router.push('/editProfile')}>
-        <Text style = {styles.profileButtons}>Edit Profile  </Text >
-        </TouchableOpacity >
-
-        <TouchableOpacity onPress={() => router.push('/accountSettings')}>
-        <Text style = {styles.profileButtons}>Account Settings</Text >
-        
-        </TouchableOpacity >
-      
-  
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Profile</Text>
         </View>
 
-            <Button 
-            title ="Logout"
-            onPress={() => router.replace('/')}></Button>
+        <View style={styles.body}>
 
+          <View style={styles.pictureContainer}>
+            <Image
+              style={styles.profilePicture}
+              source={require('../../assets/images/profilePicture.jpg')}
+            />
+          </View>
+
+          <Text style={styles.profileText}>{username}</Text>
+          <Text style={styles.profileText}>{bio}</Text>
+
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity onPress={() => router.push('/editProfile')}>
+              <Text style={styles.profileButtons}>Edit Profile</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/accountSettings')}>
+              <Text style={styles.profileButtons}>Account Settings</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Button
+            title="Logout"
+            onPress={() => router.replace('/')}
+          />
+        </View>
       </View>
-
-    
-       
- 
-</View>  
-</>
+    </>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
