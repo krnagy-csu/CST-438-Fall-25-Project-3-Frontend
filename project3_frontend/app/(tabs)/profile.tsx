@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
-import apiClient from "../../api/apiClient";   // ← IMPORTANT
+import apiClient from "../../api/apiClient";   
 
 export default function ProfilePage() {
   const [username, setUsername] = useState('@username');
@@ -34,7 +34,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.container}>
@@ -70,7 +70,7 @@ export default function ProfilePage() {
           />
         </View>
       </View>
-    </>
+    </View>
   );
 }
 

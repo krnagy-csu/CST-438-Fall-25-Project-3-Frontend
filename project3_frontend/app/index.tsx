@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button,TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 
 export default function LoginPage() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>GROUP-MEET</Text>
 
       <View>
         <TextInput style={styles.userNameInput} placeholder="Username" />
@@ -14,17 +14,15 @@ export default function LoginPage() {
           secureTextEntry={true}
         />
 
-        <Button
-          title="Login"
-          color="#5865F2"
-          onPress={() => router.replace("/(tabs)/homePage")}
-        />
-
-        <Button
-          color="#5865F2"
-          title="Create Account"
-          onPress={() => router.replace('/signup')}
-        />
+        <View style={styles.logins}>
+        <TouchableOpacity style = {styles.loginButton} onPress={() => router.replace("/(tabs)/homePage")}>
+           <Text style ={styles.loginButtonText}>Login</Text>
+           </TouchableOpacity>
+      
+           <TouchableOpacity style = {styles.loginButton} onPress={() => router.replace("/(tabs)/homePage")}>
+           <Text style ={styles.loginButtonText}>Create Account</Text>
+           </TouchableOpacity>
+           </View>
       </View>
     </View>
   );
@@ -56,4 +54,24 @@ const styles = StyleSheet.create({
     color: '#1A1A2E',
     backgroundColor: 'white',
   },
+  loginButton: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#2E3A8C",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  loginButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  logins:
+  {
+    justifyContent: 'center',
+    alignItems: 'center',
+    
+  }
 });
