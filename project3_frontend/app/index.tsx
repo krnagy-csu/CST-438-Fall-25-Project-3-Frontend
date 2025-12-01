@@ -19,7 +19,7 @@ export default function LoginPage() {
            <Text style ={styles.loginButtonText}>Login</Text>
            </TouchableOpacity>
       
-           <TouchableOpacity style = {styles.loginButton} onPress={() => router.replace("/(tabs)/homePage")}>
+           <TouchableOpacity style = {styles.loginButton} onPress={() => router.replace("/signup")}>
            <Text style ={styles.loginButtonText}>Create Account</Text>
            </TouchableOpacity>
            </View>
