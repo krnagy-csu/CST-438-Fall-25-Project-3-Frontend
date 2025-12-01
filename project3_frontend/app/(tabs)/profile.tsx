@@ -20,7 +20,7 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     try {
       // GET REAL USER DATA FROM BACKEND
-      const response = await apiClient.get("/api/users/me");
+      const response = await apiClient.get("/api/users/me-jwt-test");
       const data = response.data;
 
       console.log("PROFILE DATA:", data);
