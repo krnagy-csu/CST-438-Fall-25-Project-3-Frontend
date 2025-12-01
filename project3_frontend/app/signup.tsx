@@ -19,7 +19,7 @@ import apiClient from "../api/apiClient";
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const navigation = useNavigation<any>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,7 +79,8 @@ console.log("Browser result:", browserResult);
       try { await WebBrowser.dismissBrowser(); } catch {}
   
       Alert.alert("Welcome!", done?.user?.email || "Signed in successfully!");
-      router.replace('/(tabs)/homePage');
+      router.replace("/(tabs)/homePage");
+      
   
     } catch (e: any) {
       console.error("❌ Error:", e);

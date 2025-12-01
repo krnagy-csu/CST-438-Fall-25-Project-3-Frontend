@@ -1,73 +1,173 @@
 import { View, Text, StyleSheet, TextInput,Button,TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import { router } from 'expo-router';
-import React, { act, useState } from 'react';
+import React, { act, useEffect, useState } from 'react';
+import apiClient from '../../api/apiClient';
+import { Group } from '../../../../types/Group'
+import { Player } from '../../../../types/Player'
+import * as SecureStore from "expo-secure-store";
 
 
-export default function LoginPage() {
+
+
+export default function HomePage() {
 
     // //will use this later to replace our games placeholder 
-    // const [games, setGames] = useState([]);
-    //GET: fetch games /api/games
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [players, setPlayers] = useState<Player[]>([]);
+    //GET: fetch games /api/groups
 
+    const loadGroups = async () => {
+      try{
+        const res = await apiClient.get("/api/groups");
+        // console.log("API RESPONSE:", res.data);
+        if(res.data && res.data.groups) {
+          setGroups(res.data.groups);
+        }
+      } catch(error){
+        console.error("Failed to load groups:", error);
+      }
+    }
+      useEffect(() => {
+        loadGroups();
+      }, []);
+
+
+      const loadPlayers = async () => {
+        try {
+          const res = await apiClient.get("/api/users");
+          // console.log("PLAYERS RESPONSE:", res.data);
+          setPlayers(res.data);   
+        } catch (error) {
+          console.error("Failed to load players:", error);
+        }
+      }
+      
+      useEffect(() => {
+        loadPlayers();
+      }, []);
 
    
-  // temp data
-const games = [
-  { id: 1, name: 'OKC vs GSW', description: 'Epic basketball game', time: 'Saturday 7pm', genre: 'Sports' },
-  { id: 2, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 3, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Horror' },
-   { id: 4, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 5, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 6, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Fantasy' },
-   { id: 7, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 8, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 9, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Fantasy' },
-   { id: 10, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 11, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 12, name: 'Basketball', description: 'Basketball', time: 'Friday 8pm', genre: 'Basketball' },
-   { id: 13, name: 'D&D Campaign', description: 'Epic adventure', time: 'Saturday 7pm', genre: 'Fantasy' },
-  { id: 14, name: 'Pathfinder', description: 'Dungeon crawl', time: 'Sunday 3pm', genre: 'Fantasy' },
-  { id: 15, name: 'Call of Cthulhu', description: 'Horror mystery', time: 'Friday 8pm', genre: 'Fantasy' },
-];
+      // const sendInvite = async() => {
+      //   if(!selectedPlayer || !currentUser) {
+      //     return;
+      //   }
 
+      //   try{
+      //     const request =  {
+      //       // groupId: selectedGroup?.id,
+      //       inviterId: currentUser.id,
+      //       inviteeId: selectedPlayer.id,
+      //     };
+      //     const res = await apiClient.post("/api/invites", request);
+      //     Alert.alert("Success, Invite Sent!");
+          
+      //   }catch(error){
+      //     console.error("Failed to send invite:", error);
+      //     Alert.alert("Failed to send invite. Please try again.");
+      //   }
+      // };
 
+      const sendInvite = async () => {
+        if (!selectedPlayer || !currentUser) {
+          Alert.alert("No player selected or user not loaded.");
+          return;
+        }
+    
+      
+        try {
+          const request = {
+            inviterId: Number(currentUser.id),
+            inviteeId: Number(selectedPlayer.id),
+            // groupId: selectedGroup?.id, // temporarily removed for testing
+          };
+      
+          console.log("Sending invite request:", request); // debug log
+      
+          const res = await apiClient.post("/api/invites", request);
+          Alert.alert("Success, Invite Sent!");
+        } catch (error: any) {
+          console.error("Failed to send invite:", error.response || error);
+          Alert.alert("Failed to send invite. Please check console.");
+        }
+      };
+      
 
-
-  
+      const joinGroups = async () => {
+        if (!selectedGroup || !selectedGroup.id || !currentUser) {
+          Alert.alert("Missing group or user.");
+          return;
+        }
+      
+        try {
+          const res = await apiClient.post(`/api/groups/${selectedGroup.id}/join`, { userId: currentUser.id }   
+          );
+      
+          Alert.alert("Request Sent!");
+          setModalVisible(false);
+        } catch (error: any) {
+          console.log("Failed to join group:", error.response?.data || error);
+          Alert.alert("Join failed. Check console.");
+        }
+      };
+      
+    
 
 
   //GET: fetch players
   // /api/games?search=keyword
-const players = [
-  {id: 1, name: 'Aaron', gamesScheduled: 'D&D on Sat 7pm' },
-  {id: 2, name: 'PJ', gamesScheduled: 'Pathfinder on Sun 3pm' },
-  {id: 3, name: 'Krisztian', gamesScheduled: 'Call of Cthulhu on Fri 8pm' },
-  {id: 4, name: 'Janniel', gamesScheduled: 'D&D on Sat 7pm' },
-  {id: 5, name: 'Aaron', gamesScheduled: 'Call of Cthulhu on Fri 8pm' },
-  {id: 6, name: 'PJ', gamesScheduled: 'Call of Cthulhu on Fri 8pm' },
-  {id: 7, name: 'Krisztian', gamesScheduled: 'D&D on Sat 7pm' },
-  {id: 8, name: 'Janniel', gamesScheduled: 'Pathfinder on Sun 3pm' },
-]
+// const players = [
+//   {id: 1, name: 'Aaron', gamesScheduled: 'D&D on Sat 7pm' },
+//   {id: 2, name: 'PJ', gamesScheduled: 'Pathfinder on Sun 3pm' },
+//   {id: 3, name: 'Krisztian', gamesScheduled: 'Call of Cthulhu on Fri 8pm' },
+//   {id: 4, name: 'Janniel', gamesScheduled: 'D&D on Sat 7pm' },
+//   {id: 5, name: 'Aaron', gamesScheduled: 'Call of Cthulhu on Fri 8pm' },
+//   {id: 6, name: 'PJ', gamesScheduled: 'Call of Cthulhu on Fri 8pm' },
+//   {id: 7, name: 'Krisztian', gamesScheduled: 'D&D on Sat 7pm' },
+//   {id: 8, name: 'Janniel', gamesScheduled: 'Pathfinder on Sun 3pm' },
+// ]
 
   
 
 const [activeTab, setActiveTab] = useState('findGame');
 const [modalVisible, setModalVisible] = useState(false);
-const [selectedGame, setSelectedGame] = useState<any>(null);
+const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 const[selectedGameGenre, setSelectedGameGenre]= useState('');
 const[search, setSearch]= useState('');
+const [playersModalVisible, setPlayersModalVisible] = useState(false);
+const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+
+
+//so we can send an invite
+const [currentUser, setCurrentUser] = useState<{id: number, email: string} | null>(null);
+
+useEffect(() => {
+  const loadCurrentUser = async () => {
+    const userString = await SecureStore.getItemAsync("user");
+    if (userString) {
+      const userObj = JSON.parse(userString);
+      setCurrentUser(userObj);
+    }
+  };
+  loadCurrentUser();
+}, []);
 
 
 
+const filteredGroups = groups.filter((group) => {
+  // Check if the group matches the search input
+  const matchesSearch = group.name.toLowerCase().includes(search.toLowerCase()) ||
+                        group.description?.toLowerCase().includes(search.toLowerCase()) ||
+                        group.activityType.toLowerCase().includes(search.toLowerCase()) ||
+                        group.zipCode.toLowerCase().includes(search.toLowerCase());
 
-  const filterSearch = games.filter((game) => {
-      return(
-        game.name.toLowerCase().includes(search.toLowerCase())
-        || game.description.toLowerCase().includes(search.toLowerCase())
-        || game.time.toLowerCase().includes(search.toLowerCase())
-        || game.genre.toLowerCase().includes(search.toLowerCase())
-      );
-    });
+
+  const matchesGenre =
+  selectedGameGenre === '' || group.activityType?.toLowerCase().trim() === selectedGameGenre.toLowerCase();
+
+  return matchesSearch && matchesGenre;
+});
+
+
 
 
 
@@ -155,23 +255,30 @@ const[search, setSearch]= useState('');
 
         {/* will remove, i jsut wantted to see the horizontal scroll view */}
         <TouchableOpacity style={[styles.genreButton,
-          selectedGameGenre === 'Test1' && styles.genreButtonSelected]}
-          onPress={() => setSelectedGameGenre('Test1')}
+          selectedGameGenre === 'Adventure' && styles.genreButtonSelected]}
+          onPress={() => setSelectedGameGenre('Adventure')}
           >
-          <Text style={styles.tabsText}>Test1</Text>
+          <Text style={styles.tabsText}>Adventure</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.genreButton,
-          selectedGameGenre === 'Test2' && styles.genreButtonSelected]}
-          onPress={() => setSelectedGameGenre('Test2')}
+          selectedGameGenre === 'FPS Games' && styles.genreButtonSelected]}
+          onPress={() => setSelectedGameGenre('FPS Games')}
           >
-          <Text style={styles.tabsText}>Test2</Text>
+          <Text style={styles.tabsText}>FPS Games</Text>
           
         </TouchableOpacity>
         <TouchableOpacity style={[styles.genreButton,
-          selectedGameGenre === 'Test3' && styles.genreButtonSelected]}
-          onPress={() => setSelectedGameGenre('Test3')}
+          selectedGameGenre === 'Casual Events' && styles.genreButtonSelected]}
+          onPress={() => setSelectedGameGenre('Casual Events')}
           >
-          <Text style={styles.tabsText}>Test3</Text>
+          <Text style={styles.tabsText}>Casual Events</Text>
+          
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.genreButton,
+          selectedGameGenre === 'Others' && styles.genreButtonSelected]}
+          onPress={() => setSelectedGameGenre('Others')}
+          >
+          <Text style={styles.tabsText}>Others</Text>
           
         </TouchableOpacity>
         </ScrollView>
@@ -179,34 +286,47 @@ const[search, setSearch]= useState('');
 
 
 
-        {/* filter the games */}
-        
-        {(search ? filterSearch :games)
-        .filter(game => selectedGameGenre === '' || game.genre === selectedGameGenre) 
-    
-        .map((game) => (
-          <TouchableOpacity style ={styles.gameContainer} key={game.id}
-          onPress={() => {
-                  setSelectedGame(game);
-                  setModalVisible(true);
-          }}>
-            <Text style = {{color:'white', fontSize:25, paddingBottom: 5}}>{game.name}</Text>
-            <Text style = {{color:'#A8B0C2', paddingBottom: 5}}>{game.description}</Text>
-                  <Text style = {{color:'#A8B0C2', paddingTop: 5}}>📅 {game.time}</Text>
-          </TouchableOpacity>
-        ))}
+        {filteredGroups.map((group) => (
+      <TouchableOpacity
+        key={group.id}
+        style={styles.gameContainer}
+        onPress={() => {
+          setSelectedGroup(group);
+          setModalVisible(true);
+        }}
+      >
+        <Text style={{ color: "white", fontSize: 25, marginBottom: 5 }}> {group.name}</Text>
+        <Text style={{ color: "#A8B0C2", marginBottom: 5 }}>{group.description}</Text>
+        <Text style={{ color: "#A8B0C2" }}>  🎮 {group.activityType}</Text>
+        <Text style={{ color: "#A8B0C2" }}>📍 ZIP: {group.zipCode}</Text>
+        <Text style={{ color: "#A8B0C2" }}>🗓 {group.eventDate ? group.eventDate : "No date provided"}</Text>
+        <Text style={{ color: "#A8B0C2" }}>👥 Max Members: {group.maxMembers}</Text>
+      </TouchableOpacity>
+    ))}
             </View>
+            
           ) :  // if players tab 
            activeTab === 'findPlayers'   ?
            (
             <View>
-              {players.map((player) => (
+              {players
+              .filter(player => player.id !== currentUser?.id)
+              .map((player) => (
                 //I will add modal here later for player details, 
-                
-                <View style={styles.gameContainer} key={player.id}>
-                  <Text style = {{color:'white', fontSize:18, paddingBottom: 5}}>Player Name: {player.name}</Text>
-                  <Text style = {{color:'white', fontSize:18, paddingBottom: 5}}>Schedule: {player.gamesScheduled}</Text>
-                </View>
+                  <TouchableOpacity
+                  key={player.id}
+                  style={styles.gameContainer}
+                  onPress={() => {
+                    setSelectedPlayer(player);
+                    setPlayersModalVisible(true);
+                  }}
+                  >
+                    <View style ={styles.gameContainer} key = {player.id}>
+                    <Text style ={{color:'white', fontSize:18, paddingBottom:5}}>Player Name: {player.username}</Text>
+                    <Text style ={{color:'white', fontSize:18, paddingBottom:5}}>Schedule: {player.gamesScheduled}</Text>
+
+                  </View>
+                  </TouchableOpacity>
               ))}
 
 
@@ -224,20 +344,20 @@ const[search, setSearch]= useState('');
         <View style = {styles.modalBackground}>
           <View style = {styles.modalGameInfo}>
         <Text style={styles.text}>Game Details</Text>
-        <Text style={styles.gameTitle}>{selectedGame?.name}</Text>
-          <Text style={styles.gameDescription}>{selectedGame?.description}</Text>
+        <Text style={styles.gameTitle}>{selectedGroup?.name}</Text>
+            <Text style={styles.gameDescription}>{selectedGroup?.description}</Text>
         <View style={styles.gridRow}>
         <View style={styles.gridColumn}>
-          <Text style ={styles.modalTexts}>Players: 3/5</Text>
+          <Text style={styles.modalTexts}>Max Members: {selectedGroup?.maxMembers}</Text>
         </View>
         <View style={styles.gridColumn}>
-          <Text style={styles.modalTexts}>Genre: {selectedGame?.genre}</Text>
+          <Text style={styles.modalTexts}>ZIP: {selectedGroup?.zipCode}</Text>
         </View>
         </View>
 
         <View style={styles.gridRow}>
         <View style={styles.gridColumn}>
-          <Text style={styles.modalTexts}>Schedule: {selectedGame?.time}</Text>
+          <Text style={styles.modalTexts}>Schedule: {selectedGroup?.eventDate}</Text>
         </View>
         <View style={styles.gridColumn}>
           <Text style={styles.modalTexts}>Duration: </Text>
@@ -267,16 +387,35 @@ const[search, setSearch]= useState('');
           {/* will change onPress later, once database is set up */}
 
           
-         <Button
-            title="Request to Join"
-            onPress={() => {
-              Alert.alert("Request Sent!");
-              setModalVisible(false);
-            }}
-          />
+          <Button
+        title="Request to Join"
+        onPress={async () => {
+          await joinGroups();   
+          Alert.alert("Request Sent!");
+          setModalVisible(false);
+        }}
+        />
         <Button title="Close" onPress={() => setModalVisible(false)} />
         </View>
         </View>
+     </Modal>
+
+     <Modal
+      visible={playersModalVisible}
+      animationType='slide'
+      transparent={true}
+      >
+        <View style= {styles.modalBackground}>
+          <View style={styles.modalGameInfo}>
+            <Text style={styles.text}>Player Details</Text>
+            {/* will add player details here later */}
+            <Text style ={styles.gameTitle}>Username: {selectedPlayer?.username}</Text>
+            <Text style ={styles.gameTitle}>Email: {selectedPlayer?.email}</Text>
+            <Button title="Send An Invite" onPress={sendInvite}/>
+            <Button title="Close" onPress={() => setPlayersModalVisible(false)} />
+          </View>
+        </View>
+
      </Modal>
  
 

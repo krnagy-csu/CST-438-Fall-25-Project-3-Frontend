@@ -4,7 +4,7 @@ import { router, Stack } from 'expo-router';
 export default function LoginPage() {
   return (
     
-    <>
+    <View>
       <Stack.Screen options={{ headerShown: false }} />
 
     <View style={styles.container}>
@@ -15,9 +15,9 @@ export default function LoginPage() {
 
        
     </View>
+    </View>
 
-
-    </>
+   
   );
 }
 
