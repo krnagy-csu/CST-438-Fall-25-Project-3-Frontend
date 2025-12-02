@@ -118,7 +118,7 @@ export default function GroupCreationPage() {
         activityType: finalActivityType.trim(),
         zipCode: zipCode,
         maxMembers: maxMembers ? parseInt(maxMembers) : null,
-        eventDate: eventDate.toISOString(),
+        eventDate: eventDate.toISOString().substring(0,19),
         isRecurring: isRecurring,
         creatorId: currentUser.id,
        };
@@ -158,7 +158,18 @@ export default function GroupCreationPage() {
             {text: 'OK', onPress: () => router.push('/(tabs)/groupPage') }
         ]);
        } catch(error: any){
-        Alert.alert('Error', 'There was an error creating the group. Please try again.');
+        //Alert.alert('Error', 'There was an error creating the group. Please try again.');
+        console.error('=== ERROR DETAILS ===');
+  console.error('Full error object:', error);
+  console.error('Error response:', error.response?.data);
+  console.error('Error status:', error.response?.status);
+  console.error('Error message:', error.message);
+  console.error('===================');
+  
+  Alert.alert(
+    'Error', 
+    `There was an error creating the group. ${error.response?.data?.message || error.message || 'Please try again.'}`
+  );
        }
     };
 
