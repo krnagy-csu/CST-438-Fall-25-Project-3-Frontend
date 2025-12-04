@@ -2,8 +2,8 @@ import { View, Text, StyleSheet, TextInput,Button,TouchableOpacity, ScrollView, 
 import { router } from 'expo-router';
 import React, { act, useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
-import { Group } from '../../../types/Group';
-import { Player } from '../../../types/Player';
+import { Group } from '../../types/Group';
+import { Player } from '../../types/Player';
 import * as SecureStore from "expo-secure-store";
 
 
