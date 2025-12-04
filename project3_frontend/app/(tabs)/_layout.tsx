@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -15,8 +15,6 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-
-      
         tabBarStyle: {
           backgroundColor: '#1A1A2E',
           borderTopColor: 'transparent', 
@@ -24,46 +22,46 @@ export default function TabLayout() {
           paddingBottom: 10,            
         },
       }}>
-      
       <Tabs.Screen
         name="homePage"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="home" size={28} color={color} />,
         }}
       />
-      {/* <Tabs.Screen
-        name="searchPage"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      /> */}
+      
       <Tabs.Screen
         name="groupPage"
         options={{
           title: 'Groups',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="people" size={28} color={color} />,
         }}
       />
-
-       <Tabs.Screen
+      
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="person-circle" size={28} color={color} />,
         }}
-        
       />
+      
       <Tabs.Screen
         name="activity"
         options={{
           title: 'Activity',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="notifications" size={28} color={color} />,
         }}
-        
       />
     
-    </Tabs>
+
+    <Tabs.Screen
+    name="groupCreationPage"
+    options={{
+      title: 'Create Groups',
+      tabBarIcon: ({ color }) => <Ionicons name="people-circle" size={28} color={color} />,
+    }}
+  />
+</Tabs>
   );
 }

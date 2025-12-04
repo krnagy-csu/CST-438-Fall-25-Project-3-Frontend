@@ -101,8 +101,8 @@ export default function HomePage() {
         try {
           const res = await apiClient.post(`/api/groups/${selectedGroup.id}/join`, { userId: currentUser.id }   
           );
-      
-          Alert.alert("Request Sent!");
+          await loadGroups();
+          Alert.alert("Joined successfully!");
           setModalVisible(false);
         } catch (error: any) {
           console.log("Failed to join group:", error.response?.data || error);
@@ -300,7 +300,10 @@ const filteredGroups = groups.filter((group) => {
         <Text style={{ color: "#A8B0C2" }}>  🎮 {group.activityType}</Text>
         <Text style={{ color: "#A8B0C2" }}>📍 ZIP: {group.zipCode}</Text>
         <Text style={{ color: "#A8B0C2" }}>🗓 {group.eventDate ? group.eventDate : "No date provided"}</Text>
-        <Text style={{ color: "#A8B0C2" }}>👥 Max Members: {group.maxMembers}</Text>
+        <Text style={{ color: "#A8B0C2" }}>
+  👥 Members ({group.members.length}/{group.maxMembers})
+</Text>
+
       </TouchableOpacity>
     ))}
             </View>
@@ -313,20 +316,27 @@ const filteredGroups = groups.filter((group) => {
               .filter(player => player.id !== currentUser?.id)
               .map((player) => (
                 //I will add modal here later for player details, 
-                  <TouchableOpacity
-                  key={player.id}
-                  style={styles.gameContainer}
-                  onPress={() => {
-                    setSelectedPlayer(player);
-                    setPlayersModalVisible(true);
-                  }}
-                  >
-                    <View style ={styles.gameContainer} key = {player.id}>
-                    <Text style ={{color:'white', fontSize:18, paddingBottom:5}}>Player Name: {player.username}</Text>
-                    <Text style ={{color:'white', fontSize:18, paddingBottom:5}}>Schedule: {player.gamesScheduled}</Text>
+                <TouchableOpacity
+                key={player.id}
+                style={styles.playerCard}
+                onPress={() => {
+                  setSelectedPlayer(player);
+                  setPlayersModalVisible(true);
+                }}
+              >
+                <View style={styles.playerHeader}>
+                  <Text style={styles.playerName}>{player.username}</Text>
+                  <Text style={styles.playerEmail}>{player.email}</Text>
+                </View>
+                <Text style={styles.playerSchedule}>Groups:</Text>
+              {player.groups.map((group) => (
+                <Text key={group.id} style={{ color: '#A8B0C2', marginLeft: 5 }}>
+                  • {group.name} ({group.activityType})
+                </Text>
+              ))}
 
-                  </View>
-                  </TouchableOpacity>
+              </TouchableOpacity>
+              
               ))}
 
 
@@ -356,27 +366,33 @@ const filteredGroups = groups.filter((group) => {
         </View>
 
         <View style={styles.gridRow}>
-        <View style={styles.gridColumn}>
-          <Text style={styles.modalTexts}>Schedule: {selectedGroup?.eventDate}</Text>
-        </View>
-        <View style={styles.gridColumn}>
-          <Text style={styles.modalTexts}>Duration: </Text>
-        </View>
-        </View>
+  <View style={styles.gridColumn}>
+    <Text style={styles.modalTexts}>Schedule: {selectedGroup?.eventDate}</Text>
+  </View>
+  <View style={styles.gridColumn}>
+    <Text style={styles.modalTexts}>Members:
+    {selectedGroup?.members.map((member) => (
+      
+      <Text key={member.id} style={{ color: "white", marginLeft: 5 } }>
+        {"\n"} • {member.username}
+      </Text>
+      
+    ))}
+    </Text>
+  </View>
+</View>
 
         <Text style ={{color: '#5865F2', fontSize:20, paddingBottom:10}}>Group Info
           
          
         </Text>
 
-        <Text style = {{color:'grey', fontSize:16}}>Host:
-          {'\n'}
+        <Text style = {{color:'grey', fontSize:16}}>Host: 
           {/* //host name from the database */}
-        </Text>
+          <Text style={{ color: "white" }}>
+      {selectedGroup?.creator.username}
+    </Text>
 
-        <Text style = {{color:'grey', fontSize:16}} >
-          Players:
-          {/* //map through players later */}
         </Text>
         
         {/* placeholder for now */}
@@ -387,15 +403,23 @@ const filteredGroups = groups.filter((group) => {
           {/* will change onPress later, once database is set up */}
 
           
-          <Button
-        title="Request to Join"
-        onPress={async () => {
-          await joinGroups();   
-          Alert.alert("Request Sent!");
-          setModalVisible(false);
-        }}
-        />
-        <Button title="Close" onPress={() => setModalVisible(false)} />
+          <TouchableOpacity
+            style={styles.joinButton}
+            onPress={async () => {
+              await joinGroups();
+              // Alert.alert("Request Sent!");
+              setModalVisible(false);
+            }}
+>
+            <Text style={styles.joinButtonText}>Join Group</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.closeButton} 
+            onPress={() => setModalVisible(false)}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+
         </View>
         </View>
      </Modal>
@@ -409,12 +433,28 @@ const filteredGroups = groups.filter((group) => {
           <View style={styles.modalGameInfo}>
             <Text style={styles.text}>Player Details</Text>
             {/* will add player details here later */}
-            <Text style ={styles.gameTitle}>Username: {selectedPlayer?.username}</Text>
-            <Text style ={styles.gameTitle}>Email: {selectedPlayer?.email}</Text>
-            <Button title="Send An Invite" onPress={sendInvite}/>
-            <Button title="Close" onPress={() => setPlayersModalVisible(false)} />
+            <Text style ={styles.playerName2}>Username: {selectedPlayer?.username}</Text>
+            <Text style ={styles.playerEmail2}>Email: {selectedPlayer?.email}</Text>
+            <TouchableOpacity
+            style={styles.joinButton}
+            onPress={async () => {
+              await sendInvite();
+              Alert.alert("Request Sent!");
+              setModalVisible(false);
+            }}
+>
+            <Text style={styles.joinButtonText}>Send Invite</Text>
+          </TouchableOpacity>
+            <TouchableOpacity
+            style={styles.closeButton} 
+            onPress={() => setModalVisible(false)}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
           </View>
         </View>
+
+
+         
 
      </Modal>
  
@@ -553,6 +593,7 @@ const styles = StyleSheet.create({
   marginHorizontal: 5,
   borderColor: '#115E59',
 
+
   },
   
 
@@ -605,7 +646,79 @@ gridRow: {
 gridColumn: {
   flex: 1,
   paddingHorizontal: 5,
-}
+},
+joinButton: {
+  backgroundColor: '#5865F2',
+  padding: 12,
+  borderRadius: 10,
+  alignItems: 'center',
+  marginVertical: 5,
+},
+
+joinButtonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '600',
+},
+
+closeButton: {
+  backgroundColor: '#A8B0C2',
+  padding: 12,
+  borderRadius: 10,
+  alignItems: 'center',
+  marginVertical: 5,
+},
+
+closeButtonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '600',
+},
+playerCard: {
+  backgroundColor: '#0E1220',
+  padding: 15,
+  marginVertical: 8,
+  borderRadius: 12,
+  width: '90%',
+  alignSelf: 'center',
+  shadowColor: '#000',
+  shadowOpacity: 0.2,
+  shadowRadius: 5,
+  elevation: 5, 
+},
+
+playerHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginBottom: 8,
+},
+
+playerName: {
+  color: 'white',
+  fontSize: 18,
+  fontWeight: 'bold',
+},
+
+playerEmail: {
+  color: '#A8B0C2',
+  fontSize: 14,
+},
+
+playerSchedule: {
+  color: '#A8B0C2',
+  fontSize: 16,
+},
+playerName2: {
+  color: 'white',
+  fontSize: 20,
+  fontWeight: 'bold',
+},
+
+playerEmail2: {
+  color: '#A8B0C2',
+  fontSize: 16,
+},
+
 
   
 });
