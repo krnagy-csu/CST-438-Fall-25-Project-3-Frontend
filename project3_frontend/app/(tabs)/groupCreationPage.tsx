@@ -91,8 +91,21 @@ export default function GroupCreationPage() {
         setInvitedUsers(invitedUsers.filter(u => u.id !== userId));
     }
 
-    //POST /api/groups to create group with current user as creator
-    //Send: {name, description, activityType, zipCode, maxMembers, eventDate, isRecurring, invitedUsersIds}
+    const resetForm = () => {
+      setGroupName('');
+      setDescription('');
+      setActivityType('');
+      setCustomActivityType('');
+      setShowCustomInput(false);
+      setZipCode('');
+      setmaxMembers('');
+      setEventDate(new Date());
+      setIsRecurring(false);
+      setInvitedUsers([]);
+      setSearchUser('');
+      setActiveTab('groupDetails');
+    };
+
     const handleCreateGroup = async () => {
 
       const finalActivityType = activityType === 'Other' ? customActivityType : activityType;
@@ -154,22 +167,23 @@ export default function GroupCreationPage() {
         console.log(`Invites sent. Successful: ${successfulInvites}, Failed: ${failedInvites}`);
         }
 
+        resetForm();
         Alert.alert('Success', 'Group created successfully!', [
             {text: 'OK', onPress: () => router.push('/(tabs)/groupPage') }
         ]);
        } catch(error: any){
         //Alert.alert('Error', 'There was an error creating the group. Please try again.');
         console.error('=== ERROR DETAILS ===');
-  console.error('Full error object:', error);
-  console.error('Error response:', error.response?.data);
-  console.error('Error status:', error.response?.status);
-  console.error('Error message:', error.message);
-  console.error('===================');
+        console.error('Full error object:', error);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        console.error('Error message:', error.message);
+        console.error('===================');
   
-  Alert.alert(
-    'Error', 
-    `There was an error creating the group. ${error.response?.data?.message || error.message || 'Please try again.'}`
-  );
+        Alert.alert(
+        'Error', 
+          `There was an error creating the group. ${error.response?.data?.message || error.message || 'Please try again.'}`
+        );
        }
     };
 
