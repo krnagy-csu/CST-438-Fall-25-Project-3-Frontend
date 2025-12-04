@@ -34,15 +34,16 @@ const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
         }
         try{
           const res = await apiClient.get(`/api/groups/user/${currentUser.id}/joined`);
-          listJoinedGroups(); 
+          //listJoinedGroups(); 
           if(res.data?.groups)
           {
-             listJoinedGroups(); 
+            // listJoinedGroups(); 
             setJoinedGroups(res.data.groups);
           }
         }catch(error)
         {
           console.error("Error fetching joined groups:", error);
+          setJoinedGroups([]);
         }
       }
       useEffect(() => {
