@@ -1,12 +1,30 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput,Button, ScrollView, Image, Modal } from 'react-native';
 import { router} from 'expo-router';
-import React, {  useState } from 'react';
+import React, {  useState, useEffect } from 'react';
+import { Invite } from '../../types/Invite';
+import * as SecureStore from "expo-secure-store";
+import apiClient from '../../api/apiClient';
 
 export default function ActivityPage() {
 
 const [activeTab, setActiveTab] = useState('findMessages');
 const [modalVisible, setModalVisible] = useState(false);
+const [receivedInvites, setReceivedInvites] = useState<Invite[]>([]);
 
+
+
+const [currentUser, setCurrentUser] = useState<{id: number, email: string} | null>(null);
+
+useEffect(() => {
+  const loadCurrentUser = async () => {
+    const userString = await SecureStore.getItemAsync("user");
+    if (userString) {
+      const userObj = JSON.parse(userString);
+      setCurrentUser(userObj);
+    }
+  };
+  loadCurrentUser();
+}, []);
 
 // will replace the hardcoded data with this later
 // const [messages, setMessages] = useState([]);
@@ -17,6 +35,36 @@ const [modalVisible, setModalVisible] = useState(false);
 //     .then(data => setMessages(data));
 // }, []);
 // const [messages, setMessages] = useState([]);
+
+const acceptInvite = async (inviteId: number) => {
+  try {
+    const res = await apiClient.put(`/api/invites/${inviteId}/accept`);
+    // console.log("Accepted invite:", res.data);
+ 
+    setReceivedInvites(prev => prev.map(inv => 
+      inv.id === inviteId ? { ...inv, status: 'Accepted' } : inv
+    ));
+  } catch (error) {
+    console.error("Failed to accept invite:", error);
+  }
+};
+
+const declineInvite = async (inviteId: number) => {
+  try {
+    const res = await apiClient.put(`/api/invites/${inviteId}/decline`);
+    // console.log("Declined invite:", res.data);
+    
+    setReceivedInvites(prev => prev.map(inv => 
+      inv.id === inviteId ? { ...inv, status: 'Declined' } : inv
+    ));
+  } catch (error) {
+    console.error("Failed to decline invite:", error);
+  }
+};
+
+
+
+
 
 
   const messages = [
@@ -35,11 +83,28 @@ const [modalVisible, setModalVisible] = useState(false);
 //     .then(data => setNotifications(data));
 // }, []);
 
-const notifications = [
-  { id: 1, recipient: { id: 2, username: 'PJ' }, sender: { id: 5, username: 'Aaron' }, group: { id: 10, name: 'Epic D&D Campaign' }, title: 'Game Invite', body: 'Aaron invited you to join "Epic D&D Campaign"', date: '2025-01-12T11:25:00', notifRead: false },
-  { id: 2, recipient: { id: 2, username: 'PJ' }, sender: null, group: { id: 8, name: 'Pathfinder' }, title: 'Request Accepted', body: 'Your request to join "Pathfinder" was accepted', date: '2025-01-12T10:00:00', notifRead: false },
-  { id: 3, recipient: { id: 2, username: 'PJ' }, sender: null, group: { id: 12, name: 'Call of Cthulhu' }, title: 'Game Reminder', body: 'Game "Call of Cthulhu" starts in 2 hours', date: '2025-01-12T09:00:00', notifRead: true },
-];
+// const notifications = [
+//   { id: 1, recipient: { id: 2, username: 'PJ' }, sender: { id: 5, username: 'Aaron' }, group: { id: 10, name: 'Epic D&D Campaign' }, title: 'Game Invite', body: 'Aaron invited you to join "Epic D&D Campaign"', date: '2025-01-12T11:25:00', notifRead: false },
+//   { id: 2, recipient: { id: 2, username: 'PJ' }, sender: null, group: { id: 8, name: 'Pathfinder' }, title: 'Request Accepted', body: 'Your request to join "Pathfinder" was accepted', date: '2025-01-12T10:00:00', notifRead: false },
+//   { id: 3, recipient: { id: 2, username: 'PJ' }, sender: null, group: { id: 12, name: 'Call of Cthulhu' }, title: 'Game Reminder', body: 'Game "Call of Cthulhu" starts in 2 hours', date: '2025-01-12T09:00:00', notifRead: true },
+// ];
+
+
+useEffect(() => {
+  const loadInvites = async () => {
+    if (!currentUser) return;
+    try {
+      const res = await apiClient.get(`/api/invites/user/${currentUser.id}/pending`);
+      // console.log("Invites loaded:", res.data);
+      setReceivedInvites(res.data.invites);
+    } catch (error) {
+      console.error("Failed to load invites:", error);
+    }
+  };
+  
+
+  loadInvites();
+}, [currentUser]);
 
   return (
     
@@ -66,59 +131,72 @@ const notifications = [
                  </View>
 
 
-                <ScrollView contentContainerStyle={{paddingBottom:100}}>
-                    {activeTab === 'findMessages' ? (
-                      <View >
-                        
-                     {messages.map((message) => (
-                     
-                        <TouchableOpacity style = {styles.messageContainer} key = {message.id}>
-                           <Image style={styles.profilePicture} source={require('../../assets/images/profilePicture.jpg')}/>
-                                <View style = {{flex: 1}}>
-                        <Text style = {styles.messageUsername}>{message.sender.username}</Text>
-                      <Text style = {styles.messageBody}>{message.body}</Text>
+                 <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+              {activeTab === 'findMessages' ? (
+                <View>
+                  {messages.map((message) => (
+                    <TouchableOpacity key={message.id} style={styles.messageContainer}>
+                      <Image
+                        style={styles.profilePicture}
+                        source={require('../../assets/images/profilePicture.jpg')}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.messageUsername}>{message.sender.username}</Text>
+                        <Text style={styles.messageBody}>{message.body}</Text>
                       </View>
-                      {!message.read && <View style={styles.unreadMessages}/>}
-                        </TouchableOpacity>
-                      ))} 
+                      {!message.read && <View style={styles.unreadMessages} />}
+                    </TouchableOpacity>
+                  ))}
 
-                      
-                        <TouchableOpacity style = {styles.newMessageButton}
-                            onPress = {() => setModalVisible(true)}>
-                          <Text style = {styles.messageLogo}>+</Text>
-                        </TouchableOpacity>
-
-                      </View>
-
-                    ) : (
-                      <View>
-                        {notifications.map((notification) => (
-                          <TouchableOpacity style = {styles.messageContainer} key = {notification.id}>
-                            <View style = {styles.notificationLogo}>
-                            <Text style={styles.emojiPicture}>
-                            {notification.title === "Game Invite" ? "📩" :
-                            notification.title === "Request Accepted" ? "✅" :
-                            "⏰"}
-                          </Text>
+                  <TouchableOpacity
+                    style={styles.newMessageButton}
+                    onPress={() => setModalVisible(true)}
+                  >
+                    <Text style={styles.messageLogo}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View>
+                  {receivedInvites.length === 0 ? (
+                    <Text style={{ color: 'white', textAlign: 'center', marginTop: 20 }}>
+                      No invites yet
+                    </Text>
+                  ) : (
+                    <View>
+                      {receivedInvites.map((invite) => (
+                        <TouchableOpacity
+                          key={invite.id}
+                          style={styles.messageContainer}
+                        >
+                          <View style={styles.notificationLogo}>
+                            <Text style={styles.emojiPicture}>📩</Text>
                           </View>
-                           <View style = {{flex: 1}}>
-                            <Text style = {styles.messageUsername}>{notification.title} </Text>
-                            <Text style = {styles.messageBody}>{notification.body}</Text>
-                            </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.messageUsername}>
+                              {invite.inviterUsername} invited you to {invite.groupName}
+                            </Text>
+                            <Text style={styles.messageBody}>
+                              Status: {invite.status}
+                            </Text>
+                          </View>
+                          {invite.status?.toLowerCase() === 'pending' && (
+                          <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                            <TouchableOpacity style={styles.acceptButton} onPress={() => acceptInvite(invite.id)}>
+                              <Text style={styles.buttonText}>Accept</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.declineButton} onPress={() => declineInvite(invite.id)}>
+                              <Text style={styles.buttonText}>Decline</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
 
-
-                            {/* will do some modification later, once backend is done.
-                            the circle will disapper once the message is read */}
-                            {!notification.notifRead && <View style={styles.unreadMessages}/>}
-                          </TouchableOpacity>
-                        ))}
-
-
-                      </View> 
-                        
-                    )}
-
-                </ScrollView>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+            </ScrollView>
 
                 <Modal 
                   visible={modalVisible}
@@ -316,7 +394,24 @@ messageContainer:{
   emojiPicture:
   {
     fontSize: 26,
-  }
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50', // green
+    padding: 8,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  declineButton: {
+    backgroundColor: '#F44336', // red
+    padding: 8,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  
 }
 );
 

@@ -5,6 +5,8 @@ import apiClient from '../../api/apiClient';
 import { Group } from '../../types/Group';
 import { Player } from '../../types/Player';
 import * as SecureStore from "expo-secure-store";
+import { Picker } from '@react-native-picker/picker';
+
 
 
 
@@ -14,6 +16,8 @@ export default function HomePage() {
     // //will use this later to replace our games placeholder 
     const [groups, setGroups] = useState<Group[]>([]);
     const [players, setPlayers] = useState<Player[]>([]);
+    const [selectedInviteGroup, setSelectedInviteGroup] = useState<Group | null>(null);
+
     //GET: fetch games /api/groups
 
     const loadGroups = async () => {
@@ -47,49 +51,33 @@ export default function HomePage() {
       }, []);
 
    
-      // const sendInvite = async() => {
-      //   if(!selectedPlayer || !currentUser) {
-      //     return;
-      //   }
 
-      //   try{
-      //     const request =  {
-      //       // groupId: selectedGroup?.id,
-      //       inviterId: currentUser.id,
-      //       inviteeId: selectedPlayer.id,
-      //     };
-      //     const res = await apiClient.post("/api/invites", request);
-      //     Alert.alert("Success, Invite Sent!");
-          
-      //   }catch(error){
-      //     console.error("Failed to send invite:", error);
-      //     Alert.alert("Failed to send invite. Please try again.");
-      //   }
-      // };
+
 
       const sendInvite = async () => {
-        if (!selectedPlayer || !currentUser) {
-          Alert.alert("No player selected or user not loaded.");
+        if (!selectedPlayer || !currentUser || !selectedInviteGroup?.id) {
+          Alert.alert("Select a player and a group first.");
           return;
         }
-    
       
         try {
           const request = {
             inviterId: Number(currentUser.id),
             inviteeId: Number(selectedPlayer.id),
-            // groupId: selectedGroup?.id, // temporarily removed for testing
+            groupId: Number(selectedInviteGroup.id), // dropdown selected group
           };
       
-          console.log("Sending invite request:", request); // debug log
-      
-          const res = await apiClient.post("/api/invites", request);
+          console.log("Sending invite request:", request);
+          await apiClient.post("/api/invites", request);
           Alert.alert("Success, Invite Sent!");
+          setPlayersModalVisible(false);
         } catch (error: any) {
-          console.error("Failed to send invite:", error.response || error);
+          console.error("Failed to send invite:", error.response?.data || error);
           Alert.alert("Failed to send invite. Please check console.");
         }
       };
+      
+      
       
 
       const joinGroups = async () => {
@@ -435,6 +423,25 @@ const filteredGroups = groups.filter((group) => {
             {/* will add player details here later */}
             <Text style ={styles.playerName2}>Username: {selectedPlayer?.username}</Text>
             <Text style ={styles.playerEmail2}>Email: {selectedPlayer?.email}</Text>
+
+            <Text style={{ color: 'white', marginBottom: 5 }}>Select Group to Invite:</Text>
+            {/* //dropdown */}
+            <Picker
+              selectedValue={selectedInviteGroup?.id}
+              onValueChange={(itemValue) => {
+                const group = groups.find((g) => g.id === itemValue) || null;
+                setSelectedInviteGroup(group);
+              }}
+              style={{ color: 'white', backgroundColor: '#0E1220', marginBottom: 10 }}
+            >
+              <Picker.Item label="Select a group..." value={null} />
+              {groups.map((group) => (
+                <Picker.Item key={group.id} label={group.name} value={group.id} />
+              ))}
+            </Picker>
+
+
+
             <TouchableOpacity
             style={styles.joinButton}
             onPress={async () => {
