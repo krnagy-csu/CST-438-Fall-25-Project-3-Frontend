@@ -5,7 +5,9 @@ import apiClient from '../../api/apiClient';
 import { Group } from '../../types/Group';
 import { Player } from '../../types/Player';
 import * as SecureStore from "expo-secure-store";
+
 import { Picker } from '@react-native-picker/picker';
+
 
 
 
@@ -31,9 +33,15 @@ export default function HomePage() {
         console.error("Failed to load groups:", error);
       }
     }
-      useEffect(() => {
-        loadGroups();
-      }, []);
+      //useEffect(() => {
+      //  loadGroups();
+      //}, []);
+
+      useFocusEffect(
+        React.useCallback(() => {
+          loadGroups();
+        }, [])
+      );
 
 
       const loadPlayers = async () => {

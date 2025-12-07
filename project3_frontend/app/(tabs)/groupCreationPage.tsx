@@ -1,12 +1,17 @@
 import { View, Text, StyleSheet, TextInput, Button, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import apiClient from '../../api/apiClient';
+import * as SecureStore from 'expo-secure-store';
 
 export default function GroupCreationPage() {
     const [groupName, setGroupName] = useState('');
     const [description, setDescription] = useState('');
+    const [activityTypes, setActivityTypes] = useState<string[]>([]);
     const [activityType, setActivityType] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
+    const [customActivityType, setCustomActivityType] = useState('');
     const [zipCode, setZipCode] = useState('');
     const [maxMembers, setmaxMembers] = useState('');
     const [eventDate, setEventDate] = useState(new Date());
@@ -17,19 +22,53 @@ export default function GroupCreationPage() {
 
     const [searchUser, setSearchUser] = useState('');
     const [invitedUsers, setInvitedUsers] = useState<any[]>([]);
+    const [currentUser, setCurrentUser] = useState<{id: number, email: string} | null>(null);
+    const [availableUsers, setAvailableUsers] = useState<any[]>([]);
 
-    //placeholder user data
-    //shoud replace GET /api/users to grab all users for invite list
-    const availableUsers = [
-        { id: 1, username: 'Aaron', email: 'aaron@email.com' },
-        { id: 2, username: 'PJ', email: 'pj@email.com' },
-        { id: 3, username: 'Krisztian', email: 'krisztian@email.com' },
-        { id: 4, username: 'Janniel', email: 'janniel@email.com' },
-    ];
+    useEffect(() => {
+      const loadCurrentUser = async () => {
+        const userString = await SecureStore.getItemAsync('user');
+        if (userString) {
+          const userObj = JSON.parse(userString);
+          setCurrentUser(userObj);
+          console.log('Current User:', userObj);
+        }
+      };
+      loadCurrentUser();
+    },[]);
 
-    //should replace a GET /api/activityTypes when ready
-    //maybe we can allow for users to create an activity type
-    const activityTypes = ['D&D', 'Pathfinder', 'Basketball', 'Pickleball', 'Trivia Night', 'Other'];
+    useEffect(() => {
+      const loadUsers = async () => {
+        try{
+          const res = await apiClient.get('/api/users');
+          console.log('Available Users:', res.data);
+          setAvailableUsers(res.data);
+        } catch (error){
+          console.log('Error fetching users:', error);
+          Alert.alert('Error', 'Could not load users for invitation.');
+        }
+      };
+      loadUsers();
+    }, []);
+
+    useEffect(() => {
+      const loadActivityTypes = async () => {
+        try{
+          const res = await apiClient.get('/api/groups/activity-types');
+          console.log('Activity Types:', res.data);
+          const types = res.data.activityTypes || [];
+          if(!types.includes('Other')){
+            types.push('Other');
+          }
+
+          setActivityTypes(types); 
+        } catch (error){
+          console.log('Error fetching activity types:', error);
+          setActivityTypes(['Other']);
+        }
+      };
+      loadActivityTypes();
+    }, []);
 
     const handleDateChange = (event: any, selectedDate?: Date) => {
         setShowDatePicker(false);
@@ -52,36 +91,105 @@ export default function GroupCreationPage() {
         setInvitedUsers(invitedUsers.filter(u => u.id !== userId));
     }
 
-    //POST /api/groups to create group with current user as creator
-    //Send: {name, description, activityType, zipCode, maxMembers, eventDate, isRecurring, invitedUsersIds}
-    const handleCreateGroup = () => {
-       if(!groupName || !activityType || !zipCode){
+    const resetForm = () => {
+      setGroupName('');
+      setDescription('');
+      setActivityType('');
+      setCustomActivityType('');
+      setShowCustomInput(false);
+      setZipCode('');
+      setmaxMembers('');
+      setEventDate(new Date());
+      setIsRecurring(false);
+      setInvitedUsers([]);
+      setSearchUser('');
+      setActiveTab('groupDetails');
+    };
+
+    const handleCreateGroup = async () => {
+
+      const finalActivityType = activityType === 'Other' ? customActivityType : activityType;
+
+       if(!groupName || !finalActivityType || !zipCode){
         Alert.alert('Error', 'Please fill in all required fields.');
+        return;
+       }
+
+       if(activityType === 'Other' && !customActivityType.trim()){
+        Alert.alert('Error', 'Please specify a custom activity type.');
+        return;
+       }
+
+       if(!currentUser){
+        Alert.alert('Error', 'User not logged in.');
         return;
        }
 
        const groupData = {
         name: groupName,
         description: description,
-        activityType: activityType,
+        activityType: finalActivityType.trim(),
         zipCode: zipCode,
-        maxMembers: maxMembers,
-        eventDate: eventDate.toISOString(),
+        maxMembers: maxMembers ? parseInt(maxMembers) : null,
+        eventDate: eventDate.toISOString().substring(0,19),
         isRecurring: isRecurring,
-        invitedUsersIds: invitedUsers.map(u => u.id),
+        creatorId: currentUser.id,
        };
 
        try{
-        console.log('Group Created:', groupData);
+        console.log('Creating Group:', groupData);
+        const groupResponse = await apiClient.post('/api/groups', groupData);
+
+        const newGroupId = groupResponse.data.group.id;
+        console.log('New Group ID:', newGroupId);
+
+        if(invitedUsers.length > 0){
+          console.log(`Sending ${invitedUsers.length} invite(s)...`);
+          let successfulInvites = 0;
+          let failedInvites = 0;
+
+          for(const user of invitedUsers){
+            try{
+             const inviteData = {
+              groupId: newGroupId,
+              inviterId: currentUser.id,
+              inviteeId: user.id,
+             };
+             await apiClient.post('/api/invites', inviteData);
+             console.log(`Invite sent successfully to user ID ${user.id}`);
+             successfulInvites++;
+            } catch(error){
+              console.log(`Failed to invite user ID ${user.id}:`, error);
+              failedInvites++;
+            }
+          }
+          
+        console.log(`Invites sent. Successful: ${successfulInvites}, Failed: ${failedInvites}`);
+        }
+
+        resetForm();
         Alert.alert('Success', 'Group created successfully!', [
             {text: 'OK', onPress: () => router.push('/(tabs)/groupPage') }
         ]);
        } catch(error: any){
-        Alert.alert('Error', 'There was an error creating the group. Please try again.');
+        //Alert.alert('Error', 'There was an error creating the group. Please try again.');
+        console.error('=== ERROR DETAILS ===');
+        console.error('Full error object:', error);
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+        console.error('Error message:', error.message);
+        console.error('===================');
+  
+        Alert.alert(
+        'Error', 
+          `There was an error creating the group. ${error.response?.data?.message || error.message || 'Please try again.'}`
+        );
        }
     };
 
-    const filteredUsers = availableUsers.filter(user =>
+    const filteredUsers = availableUsers
+      .filter(user => user.id !== currentUser?.id)
+      .filter(user =>
         user.username.toLowerCase().includes(searchUser.toLowerCase()) ||
         user.email.toLowerCase().includes(searchUser.toLowerCase())
     );
@@ -144,12 +252,33 @@ export default function GroupCreationPage() {
                     styles.activityButton,
                     activityType === type && styles.activityButtonSelected
                   ]}
-                  onPress={() => setActivityType(type)}
+                  onPress={() => {
+                    setActivityType(type);
+                    if (type === 'Other') {
+                      setShowCustomInput(true);
+                    } else {
+                      setShowCustomInput(false);
+                      setCustomActivityType('');
+                  }
+                }}
                 >
                   <Text style={styles.activityButtonText}>{type}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
+            {showCustomInput && (
+              <View style = {styles.customInputContainer}>
+                <Text style={styles.label}>Enter Custom Activity Type</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., Board Games, Cooking Class, etc."
+                  placeholderTextColor="#999"
+                  value={customActivityType}
+                  onChangeText={setCustomActivityType}
+                />
+              </View>
+            )}
 
             {/* Zip Code */}
             <Text style={styles.label}>Zip Code *</Text>
@@ -354,6 +483,10 @@ const styles = StyleSheet.create({
     activityButtonText: {
       color: 'white',
       fontSize: 14,
+    },
+    customInputContainer: {
+      marginTop: 10,
+      marginBottom: 10,
     },
     dateButton: {
       backgroundColor: 'white',
