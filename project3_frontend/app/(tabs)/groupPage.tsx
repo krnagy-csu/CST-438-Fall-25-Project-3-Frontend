@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView,Button, Alert, Modal,TouchableOpacity } from 'react-native';
 import apiClient from '../../api/apiClient';
 import * as SecureStore from 'expo-secure-store';
-import { Group } from '../../../../types/Group';
+import { Group } from '../../types/Group';
 
 export default function GroupPage() {
 

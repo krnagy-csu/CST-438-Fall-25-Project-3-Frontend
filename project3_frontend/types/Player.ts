@@ -2,5 +2,5 @@ export interface Player{
     id: number;
     email:string;
     username: string;
-    gamesScheduled: string;
+    groups: { id: number; name: string; activityType: string }[];
 }
