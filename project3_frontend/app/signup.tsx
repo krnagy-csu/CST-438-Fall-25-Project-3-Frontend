@@ -24,6 +24,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState<"google" | "github" | null>(null);
 
   // Regular email/password login
   const handleLogin = async () => {
@@ -46,6 +47,8 @@ export default function SignUpPage() {
   const handleGoogleLogin = async () => {
     try {
       setBusy(true);
+      setOauthProvider("google");
+
   
       console.log("1. Starting OAuth...");
       const start = await apiClient.get("/auth/google/start");
@@ -87,8 +90,59 @@ console.log("Browser result:", browserResult);
       Alert.alert("Google Sign-In Failed", e?.message ?? "Network request failed");
     } finally {
       setBusy(false);
+      setOauthProvider(null);
     }
   };
+  const handleGithubLogin = async () => {
+    try {
+      setBusy(true);
+      setOauthProvider("github");
+
+      console.log("1. Starting GitHub OAuth...");
+      const start = await apiClient.get("/auth/google/github/start");
+      const authUrl = start.data.url;
+
+      console.log("2. Opening GitHub browser:", authUrl);
+      const browserResult = await WebBrowser.openBrowserAsync(authUrl);
+      console.log("GitHub browser result:", browserResult);
+
+      console.log("3. Polling for GitHub success...");
+
+      const poll = async (): Promise<any> => {
+        const r = await apiClient.get("/auth/google/status");
+        console.log("   GitHub poll result:", r.data.status);
+
+        if (r.data.status === "SUCCESS") return r.data;
+        if (r.data.status === "ERROR") throw new Error(r.data.error);
+
+        await new Promise((res) => setTimeout(res, 1500));
+        return poll();
+      };
+
+      const done = await poll();
+
+      console.log("4. GitHub success! Saving token...");
+
+      if (done.jwt) await SecureStore.setItemAsync("jwt", done.jwt);
+      if (done.user) await SecureStore.setItemAsync("user", JSON.stringify(done.user));
+
+      try { await WebBrowser.dismissBrowser(); } catch {}
+
+      Alert.alert(
+        "Welcome!",
+        done?.user?.email || `Signed in with GitHub as ${done?.user?.username}`
+      );
+
+      router.replace("/(tabs)/homePage");
+    } catch (e: any) {
+      console.error("❌ GitHub OAuth Error:", e);
+      Alert.alert("GitHub Sign-In Failed", e?.message ?? "Network request failed");
+    } finally {
+      setBusy(false);
+      setOauthProvider(null);
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -128,16 +182,29 @@ console.log("Browser result:", browserResult);
 
       {/* Google OAuth button */}
       <TouchableOpacity
-        style={[styles.googleButton, busy && styles.googleButtonDisabled]}
-        onPress={handleGoogleLogin}
-        disabled={busy}
-      >
-        {busy ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        )}
-      </TouchableOpacity>
+  style={[styles.googleButton, busy && styles.googleButtonDisabled]}
+  onPress={handleGoogleLogin}
+  disabled={busy}
+>
+  {busy && oauthProvider === "google" ? (
+    <ActivityIndicator color="#fff" />
+  ) : (
+    <Text style={styles.googleButtonText}>Continue with Google</Text>
+  )}
+</TouchableOpacity>
+
+      {/* GitHub OAuth button */}
+      <TouchableOpacity
+  style={[styles.githubButton, busy && styles.googleButtonDisabled]}
+  onPress={handleGithubLogin}
+  disabled={busy}
+>
+  {busy && oauthProvider === "github" ? (
+    <ActivityIndicator color="#fff" />
+  ) : (
+    <Text style={styles.githubButtonText}>Continue with GitHub</Text>
+  )}
+</TouchableOpacity>
     </View>
   );
 }
@@ -214,6 +281,20 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   googleButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  githubButton: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#333", // dark GitHub-ish color
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  githubButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

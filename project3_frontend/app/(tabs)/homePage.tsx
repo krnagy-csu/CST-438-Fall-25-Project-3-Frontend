@@ -5,6 +5,7 @@ import apiClient from '../../api/apiClient';
 import { Group } from '../../types/Group';
 import { Player } from '../../types/Player';
 import * as SecureStore from "expo-secure-store";
+import { useFocusEffect } from '@react-navigation/native';
 
 import { Picker } from '@react-native-picker/picker';
 
