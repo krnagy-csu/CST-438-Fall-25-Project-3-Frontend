@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react-nativ
 import ActivityPage from '../app/(tabs)/activity';
 import { storage } from '../utils/storage';
 import apiClient from '../api/apiClient';
-
+//comment
 jest.mock('../utils/storage');
 jest.mock('../api/apiClient');
 
