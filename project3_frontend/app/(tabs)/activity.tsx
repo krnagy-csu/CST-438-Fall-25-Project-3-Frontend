@@ -115,19 +115,22 @@ export default function ActivityPage() {
   };
 
   // Load invites
-  useEffect(() => {
-    const loadInvites = async () => {
-      if (!currentUser) return;
-      try {
-        const res = await apiClient.get(`/api/invites/user/${currentUser.id}/pending`);
-       
-        setReceivedInvites(res.data ?? []);
-      } catch (error) {
-        console.error("Failed to load invites:", error);
-      }
-    };
-    loadInvites();
-  }, [currentUser]);
+useEffect(() => {
+  const loadInvites = async () => {
+    if (!currentUser) return;
+    try {
+      const res = await apiClient.get(`/api/invites/user/${currentUser.id}/pending`);
+      // console.log("Invites response:", res.data);
+      setReceivedInvites(
+        Array.isArray(res.data?.invites) ? res.data.invites : []
+      );
+    } catch (error) {
+      console.error("Failed to load invites:", error);
+      setReceivedInvites([]); 
+    }
+  };
+  loadInvites();
+}, [currentUser]);
 
   return (
     <View style={[styles.container, styles.body]}>
@@ -187,7 +190,8 @@ export default function ActivityPage() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.messageUsername}>
-                      {invite.inviter?.username || 'Unknown user'} invited you to {invite.group?.name || 'Unknown group'}
+                    {invite.inviterUsername || 'Unknown user'} invited you to {invite.groupName || 'Unknown group'}
+
                     </Text>
                     <Text style={styles.messageBody}>Status: {invite.status}</Text>
                   </View>
