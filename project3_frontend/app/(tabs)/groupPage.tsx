@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView,Button, Alert, Modal,TouchableOpacit
 import apiClient from '../../api/apiClient';
 import * as SecureStore from 'expo-secure-store';
 import { Group } from '../../types/Group';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function GroupPage() {
 
@@ -51,6 +52,14 @@ const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
           listJoinedGroups();
         }
       }, [currentUser]);
+
+      useFocusEffect(
+        React.useCallback(() => {
+          if (currentUser) {
+            listJoinedGroups();
+          }
+        }, [currentUser])
+      );
       
 
       const leaveGroup = async (groupId: number) => {
