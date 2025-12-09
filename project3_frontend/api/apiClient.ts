@@ -1,5 +1,6 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+//import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 
 const API_BASE_URL = 'https://cst438-p3-backend-de9dd99b3c9a.herokuapp.com';
 
@@ -13,7 +14,7 @@ const apiClient = axios.create({
 
 // 🔥 AUTO ADD JWT ON ALL REQUESTS
 apiClient.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token = await storage.getItem("jwt");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView,Button, Alert, Modal,TouchableOpacity } from 'react-native';
 import apiClient from '../../api/apiClient';
-import * as SecureStore from 'expo-secure-store';
+//import * as SecureStore from 'expo-secure-store';
+import { storage } from '../../utils/storage';
 import { Group } from '../../types/Group';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -19,7 +20,7 @@ const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
     useEffect(() => {
       const loadCurrentUser = async () => {
-        const userString = await SecureStore.getItemAsync("user");
+        const userString = await storage.getItem("user");
         if (userString) {
           setCurrentUser(JSON.parse(userString));
         }
