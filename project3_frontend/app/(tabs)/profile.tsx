@@ -33,6 +33,21 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      // Remove auth info from secure storage
+      await AsyncStorage.removeItem("jwt");
+      await AsyncStorage.removeItem("user");
+  
+      // Optionally: you can also clear other cached stuff here
+  
+      // Navigate to login / welcome screen
+      router.replace("/"); // or "/signIn" or whatever your auth entry route is
+    } catch (e) {
+      console.log("Error during logout:", e);
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -65,9 +80,10 @@ export default function ProfilePage() {
           </View>
 
           <Button
-            title="Logout"
-            onPress={() => router.replace('/')}
-          />
+  title="Logout"
+  onPress={handleLogout}
+/>
+
         </View>
       </View>
     </View>
