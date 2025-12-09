@@ -463,7 +463,7 @@ const filteredGroups = groups.filter((group) => {
           </TouchableOpacity>
             <TouchableOpacity
             style={styles.closeButton} 
-            onPress={() => setModalVisible(false)}>
+            onPress={() => setPlayersModalVisible(false)}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
           </View>
