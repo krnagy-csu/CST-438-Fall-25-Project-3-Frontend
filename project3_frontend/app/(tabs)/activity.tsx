@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button, ScrollView, Image, Modal } from 'react-native';
 import { router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import * as SecureStore from "expo-secure-store";
+//import * as SecureStore from "expo-secure-store";
+import { storage } from '../../utils/storage';
 import apiClient from '../../api/apiClient';
 
 export default function ActivityPage() {
@@ -26,7 +27,7 @@ export default function ActivityPage() {
   // Load current user
   useEffect(() => {
     const loadCurrentUser = async () => {
-      const userString = await SecureStore.getItemAsync("user");
+      const userString = await storage.getItem("user");
       if (userString) {
         const userObj = JSON.parse(userString);
         setCurrentUser(userObj);

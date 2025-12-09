@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import apiClient from '../../api/apiClient';
-import * as SecureStore from 'expo-secure-store';
+//import * as SecureStore from 'expo-secure-store';
+import { storage } from '../../utils/storage';
 
 export default function GroupCreationPage() {
     const [groupName, setGroupName] = useState('');
@@ -27,7 +28,7 @@ export default function GroupCreationPage() {
 
     useEffect(() => {
       const loadCurrentUser = async () => {
-        const userString = await SecureStore.getItemAsync('user');
+        const userString = await storage.getItem('user');
         if (userString) {
           const userObj = JSON.parse(userString);
           setCurrentUser(userObj);

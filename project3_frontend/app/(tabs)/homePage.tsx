@@ -4,7 +4,8 @@ import React, { act, useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
 import { Group } from '../../types/Group';
 import { Player } from '../../types/Player';
-import * as SecureStore from "expo-secure-store";
+//import * as SecureStore from "expo-secure-store";
+import { storage } from '../../utils/storage';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { Picker } from '@react-native-picker/picker';
@@ -139,7 +140,7 @@ const [currentUser, setCurrentUser] = useState<{id: number, email: string} | nul
 
 useEffect(() => {
   const loadCurrentUser = async () => {
-    const userString = await SecureStore.getItemAsync("user");
+    const userString = await storage.getItem("user");
     if (userString) {
       const userObj = JSON.parse(userString);
       setCurrentUser(userObj);
